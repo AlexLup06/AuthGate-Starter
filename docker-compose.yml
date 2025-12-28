@@ -1,0 +1,41 @@
+
+version: "3.9"
+
+services:
+  gateway:
+    image: yourorg/authgate-gateway:latest
+    ports:
+      - "80:80"
+    env_file: .env
+    depends_on:
+      - auth
+      - app
+
+  auth:
+    image: yourorg/authgate:latest
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/authgate
+      BASE_PATH: /auth
+      PUBLIC_URL: http://localhost
+      SESSION_TTL: 24h
+      COOKIE_NAME: authgate_session
+      COOKIE_SECURE: "false"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: authgate
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - authgate-db:/var/lib/postgresql/data
+
+  app:
+    image: nginx:alpine
+    volumes:
+      - ./app:/usr/share/nginx/html:ro
+
+volumes:
+  authgate-db:
